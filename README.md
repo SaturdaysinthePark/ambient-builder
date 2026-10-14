@@ -1,6 +1,6 @@
 # Ambient Builder
 
-Two friends talk about an idea over coffee. One of them taps **Start a conversation**, and a coding agent builds the app in the background while they talk:
+Two friends talk about an idea over coffee. One of them taps **Start listening**, and a coding agent builds the app in the background while they talk:
 
 - What they **decide** gets built, and a live preview on the phone updates every minute or two.
 - What's still **open**, or a good idea for **later**, goes on the plan and roadmap instead of into code.
@@ -8,9 +8,13 @@ Two friends talk about an idea over coffee. One of them taps **Start a conversat
 - By the end there's a small app to demo. It's a normal project folder with a git history, and you can push it to GitHub with one tap.
 - Next time, tap **Continue** on the idea and keep going where you left off.
 
-| Plan (from the conversation) | Live preview | Wrap-up |
-|---|---|---|
-| ![Plan tab](docs/ui-plan.png) | ![Preview tab](docs/ui-preview.png) | ![Wrap-up screen](docs/ui-wrap-up.png) |
+| Start | While you talk | The app, one tap away | After you wrap up |
+|---|---|---|---|
+| ![Home screen](docs/ui-home.png) | ![Live notes: decided ideas highlighted, open questions and later ideas in the margin, dropped ideas struck through](docs/ui-live.png) | ![Live app preview](docs/ui-app.png) | ![Outcome screen with the app and what was decided](docs/ui-outcome.png) |
+
+The notes work like annotated notes. Decided ideas get a highlighter mark, open questions get a **?** in the margin, parked ideas get **later**, and dropped ideas are struck through with the reason. While you talk, the screen stays dark and calm, and a single line moves with your voice. Tap the line to pause. On a laptop, the notes and the app sit side by side:
+
+<img src="docs/ui-laptop.png" alt="Laptop layout: notes on the left, the live app on the right">
 
 The screenshots above use the mock builder. Below is what one **real** builder turn produced from the sample conversation in [`fixtures/subscription-convo.txt`](fixtures/subscription-convo.txt), in about 50 seconds:
 
@@ -60,7 +64,7 @@ npm run whisper:setup    # optional: free local speech-to-text (whisper.cpp + ba
 npm run mock             # canned analyst + builder; open the printed link
 ```
 
-Tap **▶ Try the sample conversation**. The sample plays at 2× speed, and you'll see the plan fill in and the preview change.
+Tap **Hear a sample conversation**. The sample plays at 2× speed, and you'll see the notes fill in and the app change.
 
 For the real thing with the sample conversation, run `npm start`, tap the same button, and watch Claude build it.
 
@@ -79,9 +83,9 @@ npm start      # laptop only: open the printed http://localhost:4317/?key=… li
 npm run tunnel # phone too: prints an https://….trycloudflare.com link and a QR code
 ```
 
-Phones only allow the microphone over **HTTPS**. `npm run tunnel` uses a free [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/), which needs no account. Install it once with `brew install cloudflared`. You can also show the QR code from the laptop UI with **📱 Open on phone**.
+Phones only allow the microphone over **HTTPS**. `npm run tunnel` uses a free [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/), which needs no account. Install it once with `brew install cloudflared`. You can also show the QR code from the laptop's home screen with **Open on your phone**.
 
-Then tap **Start a conversation** and talk. Put the phone face-up on the table. The screen stays on while listening, because a sleeping phone stops the mic. Glance at the **App** tab whenever you like. Use **Type a note** to correct things, for example "call it SubTrack". When you're done, tap **Wrap up**.
+Then tap **Start listening** and talk. Put the phone face-up on the table. The screen stays on while listening, because a sleeping phone stops the mic. Tap **App** whenever you like; a dot means it changed since you last looked. Use the pencil to add a note, for example "call it SubTrack". When you're done, tap **End**, then **Wrap up**. It finishes the current change, checks the app builds, and shows you what you made.
 
 **Speech-to-text options (all free):**
 
@@ -102,7 +106,7 @@ You don't need to create a GitHub repo or plan anything ahead of time.
 1. **Start** copies [`templates/starter-app`](templates/starter-app) (Vite + React + Tailwind) to `projects/<id>/app/`, runs `git init` there (local only), and starts its dev server.
 2. The analyst **names the project** from the conversation, for example `subscription-tracker`. Tap the name to rename it.
 3. Each builder turn **edits files and commits**. `SPEC.md` and `ROADMAP.md` in the app stay in sync with the plan.
-4. **Wrap up** runs a final build, writes `SUMMARY.md` and commits.
+4. **End → Wrap up** runs a final build, writes `SUMMARY.md` and commits.
 5. **Save to GitHub** creates a *private* repo named after the project with `gh repo create` and pushes. If GitHub isn't connected, the app stays local and the button tells you to run `gh auth login` once. You can save it later from the home screen.
 
 Afterwards it's a normal standalone project. Run it with `npm install && npm run dev`, open it in Claude Code, or tap **Continue** for another conversation.
@@ -130,7 +134,8 @@ Afterwards it's a normal standalone project. Run it with `npm install && npm run
 ```bash
 npm test          # unit + integration tests (mock analyst/builder)
 npm run typecheck
-npm run e2e       # Playwright: plays the sample conversation through the UI in mock mode
+npm run e2e       # Playwright, mock mode: the full journey, plus a fake mic → fake Whisper audio test
+npm run screens   # screenshots of every journey state (phone light/dark + laptop) in test-results/screens/
 npm run replay -- subscription-convo.txt --speed 3   # feed a fixture into a running server
 ```
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ProjectMeta, PublishResult, Settings, Snapshot } from './types'
+import type { ProjectCard, PublishResult, Settings, Snapshot } from './types'
 
 async function call<T>(path: string, body?: unknown): Promise<T> {
   const r = await fetch(path, {
@@ -13,7 +13,7 @@ async function call<T>(path: string, body?: unknown): Promise<T> {
 }
 
 export const api = {
-  state: () => call<{ snapshot: Snapshot | null; projects: ProjectMeta[]; settings: Settings }>('/api/state'),
+  state: () => call<{ snapshot: Snapshot | null; projects: ProjectCard[]; settings: Settings }>('/api/state'),
   start: (projectId?: string) => call<Snapshot>('/api/session/start', { projectId }),
   end: () => call<Snapshot>('/api/session/end', {}),
   text: (text: string) => call('/api/session/text', { text }),

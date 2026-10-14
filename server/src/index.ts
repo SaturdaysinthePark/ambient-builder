@@ -105,13 +105,42 @@ export async function createServer() {
   })
 
   // ---------- API ----------
+  /** Project list for the home screen, with each idea's summary and how far it got. */
+  const projectCards = async () =>
+    Promise.all(
+      (await store.list()).map(async (p) => {
+        const l = await store.ledger(p.id)
+        const n = (s: string) => l.items.filter((i) => i.status === s).length
+        return { ...p, lastBuiltLedger: undefined, summary: l.summary, counts: { decided: n('decided'), open: n('open'), roadmap: n('roadmap') } }
+      }),
+    )
+
+  // GitHub and Whisper checks can be slow (gh makes a network call), so the home screen
+  // never waits on them: answer from a short-lived cache and refresh in the background.
+  const cached = <T,>(ttlMs: number, load: () => Promise<T>) => {
+    let value: Promise<T> | undefined
+    let at = 0
+    return (force = false) => {
+      if (force || !value || Date.now() - at > ttlMs) {
+        const next = load()
+        at = Date.now()
+        value = value && !force ? Promise.race([next, value]) : next
+        next.then((v) => (value = Promise.resolve(v)))
+      }
+      return value
+    }
+  }
+  const githubCached = cached(60_000, githubStatus)
+  const whisperCached = cached(5_000, () => whisper.available())
+  void githubCached()
+
   app.get('/api/state', async () => ({
     snapshot: session?.snapshot() ?? null,
-    projects: await store.list(),
+    projects: await projectCards(),
     settings: {
       mock: config.mock,
-      whisper: await whisper.available(),
-      github: await githubStatus(),
+      whisper: await whisperCached(),
+      github: await githubCached(),
       publicUrl,
     },
   }))
@@ -171,6 +200,7 @@ export async function createServer() {
     if (!meta) return reply.code(404).send({ error: 'no such project' })
     if (session?.id === meta.id && session.phase === 'live') return reply.code(409).send({ error: 'end the conversation first' })
     const res = await publishToGithub(store.appDir(meta.id), meta.name)
+    void githubCached(true) // they may have just run gh auth login
     if (res.ok) {
       if (session?.id === meta.id) session.setRepoUrl(res.url)
       else {

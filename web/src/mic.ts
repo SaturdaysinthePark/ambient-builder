@@ -25,7 +25,12 @@ export interface MicHandle {
  * 'browser' uses the browser's own speech recognition and sends text.
  * Also holds a screen wake lock: a sleeping phone stops the mic.
  */
-export async function startMic(mode: MicMode, send: (d: ArrayBuffer | string) => void, onError: (m: string) => void): Promise<MicHandle> {
+export async function startMic(
+  mode: MicMode,
+  send: (d: ArrayBuffer | string) => void,
+  onError: (m: string) => void,
+  onLevel: (level: number) => void = () => {},
+): Promise<MicHandle> {
   // Create the AudioContext before any await so it counts as part of the tap (iOS autoplay rules).
   const ctx = mode === 'whisper' ? new AudioContext() : undefined
   let wakeLock: { release(): Promise<void> } | undefined
@@ -41,12 +46,13 @@ export async function startMic(mode: MicMode, send: (d: ArrayBuffer | string) =>
     const rec = new Rec()
     let running = true
     rec.continuous = true
-    rec.interimResults = false
+    rec.interimResults = true
     rec.lang = navigator.language || 'en-US'
     rec.onresult = (e) => {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i]
         if (r.isFinal && r[0].transcript.trim()) send(JSON.stringify({ type: 'text', text: r[0].transcript }))
+        else onLevel(0.08) // no audio levels in this mode; nudge the line when speech is heard
       }
     }
     // Browsers end recognition after silence or ~60s; keep it going.
@@ -73,7 +79,10 @@ export async function startMic(mode: MicMode, send: (d: ArrayBuffer | string) =>
   await ctx.audioWorklet.addModule('/pcm-worklet.js')
   const src = ctx.createMediaStreamSource(stream)
   const node = new AudioWorkletNode(ctx, 'pcm-worklet')
-  node.port.onmessage = (e) => send(e.data as ArrayBuffer)
+  node.port.onmessage = (e: MessageEvent<{ pcm: ArrayBuffer; level: number }>) => {
+    send(e.data.pcm)
+    onLevel(e.data.level)
+  }
   src.connect(node)
   return {
     stop() {

@@ -33,6 +33,14 @@ export interface ProjectMeta {
   conversations: { startedAt: string; endedAt?: string }[]
 }
 
+export type EndStep = 'catching-up' | 'finishing' | 'checking' | 'summarizing'
+
+/** A project as listed on the home screen. */
+export interface ProjectCard extends ProjectMeta {
+  summary?: string
+  counts: { decided: number; open: number; roadmap: number }
+}
+
 export interface Snapshot {
   project: ProjectMeta
   phase: 'live' | 'ending' | 'ended'
@@ -43,6 +51,7 @@ export interface Snapshot {
   preview: { status: string; error?: string; path: string }
   commits: { hash: string; message: string; at: string }[]
   endSummary?: { buildOk: boolean; buildError?: string }
+  endStep?: EndStep
 }
 
 export interface Settings {

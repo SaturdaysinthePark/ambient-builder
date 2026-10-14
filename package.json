@@ -19,7 +19,8 @@
     "build": "npm run build -w web",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
     "test": "npm run test -w server",
-    "e2e": "npm run build && playwright test"
+    "e2e": "npm run build && playwright test",
+    "screens": "npm run build && SCREENS=1 playwright test screens"
   },
   "engines": {
     "node": ">=20"

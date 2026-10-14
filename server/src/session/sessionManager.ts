@@ -10,6 +10,7 @@ import { npmCmd, run } from '../util/exec.js'
 import { Commit, ProjectMeta, ProjectStore, TranscriptLine } from './projectStore.js'
 
 export type Phase = 'live' | 'ending' | 'ended'
+export type EndStep = 'catching-up' | 'finishing' | 'checking' | 'summarizing'
 
 export interface Snapshot {
   project: ProjectMeta
@@ -21,6 +22,7 @@ export interface Snapshot {
   preview: { status: string; error?: string; path: string }
   commits: Commit[]
   endSummary?: { buildOk: boolean; buildError?: string }
+  endStep?: EndStep
 }
 
 export interface Deps {
@@ -47,6 +49,7 @@ export class LiveSession extends EventEmitter {
   private timer?: NodeJS.Timeout
   private commits: Commit[] = []
   private endSummary?: Snapshot['endSummary']
+  private endStep?: EndStep
   private emitTimer?: NodeJS.Timeout
 
   private constructor(
@@ -89,6 +92,7 @@ export class LiveSession extends EventEmitter {
       preview: this.deps.preview.status(this.id),
       commits: this.commits.slice(0, 20),
       endSummary: this.endSummary,
+      endStep: this.endStep,
     }
   }
 
@@ -222,15 +226,23 @@ export class LiveSession extends EventEmitter {
     if (this.phase !== 'live') return
     this.phase = 'ending'
     clearInterval(this.timer)
-    this.changed()
+    const step = (s: EndStep) => {
+      this.endStep = s
+      this.changed()
+    }
+    step('catching-up')
     await this.runAnalyst()
+    if (this.analystRunning) await this.analystRunning
+    step('finishing')
     await this.settle()
     this.maybeBuild()
     await this.settle()
+    step('checking')
 
     const appDir = this.deps.store.appDir(this.id)
     const build = await run(npmCmd, ['run', 'build'], { cwd: appDir, timeoutMs: 180_000 })
     this.endSummary = { buildOk: build.code === 0, buildError: build.code === 0 ? undefined : (build.stderr || build.stdout).slice(-600) }
+    step('summarizing')
     await writeFile(path.join(appDir, 'SUMMARY.md'), summaryMarkdown(this.meta, this.ledger, this.transcript))
     await this.deps.store.saveLedger(this.id, this.ledger)
     const conv = this.meta.conversations.at(-1)
