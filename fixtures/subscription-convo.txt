@@ -1,0 +1,13 @@
+Friend 1: I have this idea, it's like an app that will let users register their subscriptions and then they can track their spending
+Friend 2: Oh that's great, and then companies can use our data to make more informed decisions about their packages
+Friend 1: Yeah, and users can track how much they subscribe to
+Friend 2: How would we price this?
+Friend 1: Maybe per user
+Friend 2: No no, that would punish the user and risk adoption
+Friend 1: Right, right
+Friend 2: We charge the companies for access to the data
+Friend 1: Sure, but that seems small
+Friend 2: No hold on, so TV companies who give the subscription all want this info cross-subscription, but so would advertisers. It's a bargaining chip for them to negotiate too, lower ad costs on less popular streamers
+Friend 1: I was thinking UX is simple, you login to each sub and we give the user a history and dashboard of their spend
+Friend 2: Yeah a dashboard, monthly total up top, then each subscription with what it costs and when it renews
+Friend 1: And it should flag ones you haven't used in a while

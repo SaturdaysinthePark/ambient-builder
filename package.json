@@ -1,0 +1,19 @@
+{
+  "name": "ambient-builder",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Talk about an idea; a coding agent builds it while you talk.",
+  "type": "module",
+  "workspaces": ["server", "web"],
+  "scripts": {
+    "setup": "npm install && npm --prefix templates/starter-app install --no-audit --no-fund",
+    "dev": "npm run build -w web && npm run start -w server",
+    "start": "npm run start -w server",
+    "tunnel": "npm run start -w server -- --tunnel",
+    "replay": "npm run replay -w server --",
+    "build": "npm run build -w web",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
+    "test": "npm run test -w server"
+  },
+  "engines": { "node": ">=20" }
+}
