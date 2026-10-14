@@ -8,12 +8,6 @@ export function ago(iso: string, now = Date.now()) {
   return d === 1 ? 'yesterday' : `${d} days ago`
 }
 
-export function duration(fromIso: string, toIso?: string, now = Date.now()) {
-  const ms = (toIso ? new Date(toIso).getTime() : now) - new Date(fromIso).getTime()
-  const m = Math.max(0, Math.floor(ms / 60000))
-  if (m < 1) return '<1 min'
-  return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`
-}
 
 export const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 

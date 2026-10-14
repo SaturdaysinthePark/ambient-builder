@@ -44,7 +44,8 @@ export async function createServer() {
   async function openSession(projectId?: string) {
     if (session && session.id === projectId && session.phase === 'live') return session
     if (session) {
-      if (session.phase === 'live') await session.end()
+      // Covers "tap stop, then record again right away": let the wrap-up finish its commit first.
+      await session.end()
       session.dispose()
     }
     replayAbort?.abort()
@@ -156,11 +157,21 @@ export async function createServer() {
     return s.snapshot()
   })
 
+  /** Starts the wrap-up and returns at once; progress arrives over the WebSocket. (A long-held
+   * request would time out through the tunnel, and the wrap-up can take minutes.) */
   app.post('/api/session/end', async (_req, reply) => {
     if (!session) return reply.code(404).send({ error: 'no session' })
     replayAbort?.abort()
-    await session.end()
-    return session.snapshot()
+    const s = session
+    void s.end().catch((e) => console.error('[wrap-up]', e))
+    await new Promise((r) => setImmediate(r))
+    return s.snapshot()
+  })
+
+  /** The whole transcript of the current idea (the live snapshot only carries the last lines). */
+  app.get('/api/session/transcript', async (_req, reply) => {
+    if (!session) return reply.code(404).send({ error: 'no session' })
+    return { lines: await store.transcript(session.id) }
   })
 
   app.post<{ Body: { text: string } }>('/api/session/text', async (req, reply) => {

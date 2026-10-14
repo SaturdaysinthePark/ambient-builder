@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { ProjectCard, PublishResult, Settings, Snapshot } from './types'
+import type { ProjectCard, PublishResult, Settings, Snapshot, TranscriptLine } from './types'
 
 async function call<T>(path: string, body?: unknown): Promise<T> {
   const r = await fetch(path, {
@@ -17,6 +17,7 @@ export const api = {
   start: (projectId?: string) => call<Snapshot>('/api/session/start', { projectId }),
   end: () => call<Snapshot>('/api/session/end', {}),
   text: (text: string) => call('/api/session/text', { text }),
+  transcript: () => call<{ lines: TranscriptLine[] }>('/api/session/transcript'),
   analyze: () => call<Snapshot>('/api/session/analyze', {}),
   replay: (speed = 1) => call('/api/session/replay', { speed }),
   rename: (id: string, name: string) => call(`/api/project/${id}/rename`, { name }),

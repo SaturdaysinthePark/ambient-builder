@@ -8,7 +8,7 @@ const MARK: Record<Status, string> = { decided: '', open: '?', roadmap: 'later',
  * The ledger as annotated notes: decided ideas get a highlighter, open questions a "?" in
  * the margin, parked ideas "later", dropped ideas a strike-through with the reason.
  */
-export default function Notes({ items, only, size = 'lg' }: { items: LedgerItem[]; only?: Status[]; size?: 'lg' | 'md' }) {
+export default function Notes({ items, only, size = 'md' }: { items: LedgerItem[]; only?: Status[]; size?: 'md' }) {
   // Items that change after first render get the highlighter sweep (kept for 1.5s so
   // frequent re-renders don't cut it short). The initial set doesn't animate.
   const seen = useRef<Map<string, string> | null>(null)

@@ -61,12 +61,16 @@ describe('LiveSession (mock analyst + builder)', () => {
     expect(builder.calls[0].firstTurn).toBe(true)
     expect(builder.calls[1].firstTurn).toBe(false)
 
-    await s.end()
+    // Ending twice (e.g. a double tap) shares one wrap-up.
+    const [a, b] = [s.end(), s.end()]
+    expect(a).toBe(b)
+    await a
     expect(s.phase).toBe('ended')
     expect(readFileSync(path.join(appDir, 'SUMMARY.md'), 'utf8')).toContain('Charge users a per-user fee (punishes users and risks adoption)')
     expect(readFileSync(path.join(appDir, 'ROADMAP.md'), 'utf8')).toMatch(/advertisers/)
     const log = (await git(appDir, ['log', '--pretty=%s'])).stdout.trim().split('\n')
     expect(log[0]).toBe('Wrap up conversation: spec, roadmap and summary')
+    expect(log.filter((m) => m.startsWith('Wrap up')).length).toBe(1)
     expect(log.at(-1)).toBe('Start from Ambient Builder template')
     expect(log.length).toBeGreaterThanOrEqual(4)
     if (existsSync(path.join(config.templateDir, 'node_modules'))) expect(s.snapshot().endSummary?.buildOk).toBe(true)

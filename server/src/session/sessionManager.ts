@@ -221,9 +221,18 @@ export class LiveSession extends EventEmitter {
     }
   }
 
-  /** Wrap up: fold in the last words, let the builder finish, build, write SUMMARY.md, commit. */
-  async end() {
-    if (this.phase !== 'live') return
+  private endPromise?: Promise<void>
+
+  /**
+   * Wrap up: fold in the last words, let the builder finish, build, write SUMMARY.md, commit.
+   * Safe to call more than once; every caller waits on the same wrap-up.
+   */
+  end(): Promise<void> {
+    this.endPromise ??= this.wrapUp()
+    return this.endPromise
+  }
+
+  private async wrapUp() {
     this.phase = 'ending'
     clearInterval(this.timer)
     const step = (s: EndStep) => {

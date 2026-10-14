@@ -1,20 +1,15 @@
 # Ambient Builder
 
-Two friends talk about an idea over coffee. One of them taps **Start listening**, and a coding agent builds the app in the background while they talk:
+Two friends talk about an idea over coffee. One of them taps the **record button**, and a coding agent quietly builds the app while they talk:
 
-- What they **decide** gets built, and a live preview on the phone updates every minute or two.
-- What's still **open**, or a good idea for **later**, goes on the plan and roadmap instead of into code.
-- When they **change their minds** ("per-user pricing? no, that punishes users"), the old idea is marked superseded and removed from the app.
-- By the end there's a small app to demo. It's a normal project folder with a git history, and you can push it to GitHub with one tap.
-- Next time, tap **Continue** on the idea and keep going where you left off.
+- What they **decide** gets built. Nothing on screen interrupts the conversation. The app is in the menu whenever you want to look.
+- What's still **open**, or a good idea for **later**, goes in the plan instead of into code.
+- When they **change their minds** ("per-user pricing? no, that punishes users"), the old idea is struck from the plan and removed from the app.
+- Tap the button again to stop. The app is wrapped up and saved in the background. If you tap record again within 15 minutes, it keeps going on the same idea.
 
-| Start | While you talk | The app, one tap away | After you wrap up |
-|---|---|---|---|
-| ![Home screen](docs/ui-home.png) | ![Live notes: decided ideas highlighted, open questions and later ideas in the margin, dropped ideas struck through](docs/ui-live.png) | ![Live app preview](docs/ui-app.png) | ![Outcome screen with the app and what was decided](docs/ui-outcome.png) |
-
-The notes work like annotated notes. Decided ideas get a highlighter mark, open questions get a **?** in the margin, parked ideas get **later**, and dropped ideas are struck through with the reason. While you talk, the screen stays dark and calm, and a single line moves with your voice. Tap the line to pause. On a laptop, the notes and the app sit side by side:
-
-<img src="docs/ui-laptop.png" alt="Laptop layout: notes on the left, the live app on the right">
+| The whole screen | While recording | Everything else is in ≡ | Plan | App | Deploy |
+|---|---|---|---|---|---|
+| ![Record button](docs/ui-record.png) | ![Recording: the stop button, a pulsing dot, the timer, and a dot on the menu when there's something new](docs/ui-recording.png) | ![Menu: transcript, plan, app, deploy, ideas](docs/ui-menu.png) | ![Plan: decided ideas highlighted, later ideas in the margin, dropped ideas struck through](docs/ui-plan.png) | ![The app being built](docs/ui-app.png) | ![Deploy: build check, Save to GitHub, saved steps](docs/ui-deploy.png) |
 
 The screenshots above use the mock builder. Below is what one **real** builder turn produced from the sample conversation in [`fixtures/subscription-convo.txt`](fixtures/subscription-convo.txt), in about 50 seconds:
 
@@ -64,7 +59,7 @@ npm run whisper:setup    # optional: free local speech-to-text (whisper.cpp + ba
 npm run mock             # canned analyst + builder; open the printed link
 ```
 
-Tap **Hear a sample conversation**. The sample plays at 2× speed, and you'll see the notes fill in and the app change.
+Open the menu (≡) and tap **Hear a sample conversation**. It plays at 2× speed. Watch **Plan** fill in and **App** change.
 
 For the real thing with the sample conversation, run `npm start`, tap the same button, and watch Claude build it.
 
@@ -85,7 +80,11 @@ npm run tunnel # phone too: prints an https://….trycloudflare.com link and a Q
 
 Phones only allow the microphone over **HTTPS**. `npm run tunnel` uses a free [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/), which needs no account. Install it once with `brew install cloudflared`. You can also show the QR code from the laptop's home screen with **Open on your phone**.
 
-Then tap **Start listening** and talk. Put the phone face-up on the table. The screen stays on while listening, because a sleeping phone stops the mic. Tap **App** whenever you like; a dot means it changed since you last looked. Use the pencil to add a note, for example "call it SubTrack". When you're done, tap **End**, then **Wrap up**. It finishes the current change, checks the app builds, and shows you what you made.
+Then tap the **record button** and talk. Put the phone face-up on the table. The screen stays on while recording, because a sleeping phone stops the mic. All you see is a timer. A dot on the menu (≡) means there's something new to look at.
+
+- The menu has **Transcript** (you can add a typed note there, for example "call it SubTrack"), **Plan**, **App**, **Deploy** and **Ideas**.
+- Tap the button again to **stop**. It finishes the current change, checks the app builds, writes a summary and commits.
+- Tap record again soon after to **keep going** on the same idea, or pick **Ideas → New idea** first.
 
 **Speech-to-text options (all free):**
 
@@ -103,13 +102,13 @@ Deepgram and AssemblyAI both have free signup credits and would add speaker labe
 
 You don't need to create a GitHub repo or plan anything ahead of time.
 
-1. **Start** copies [`templates/starter-app`](templates/starter-app) (Vite + React + Tailwind) to `projects/<id>/app/`, runs `git init` there (local only), and starts its dev server.
-2. The analyst **names the project** from the conversation, for example `subscription-tracker`. Tap the name to rename it.
+1. **Record** (on a new idea) copies [`templates/starter-app`](templates/starter-app) (Vite + React + Tailwind) to `projects/<id>/app/`, runs `git init` there (local only), and starts its dev server.
+2. The analyst **names the project** from the conversation, for example `subscription-tracker`. Tap the name at the top of the menu to rename it.
 3. Each builder turn **edits files and commits**. `SPEC.md` and `ROADMAP.md` in the app stay in sync with the plan.
-4. **End → Wrap up** runs a final build, writes `SUMMARY.md` and commits.
-5. **Save to GitHub** creates a *private* repo named after the project with `gh repo create` and pushes. If GitHub isn't connected, the app stays local and the button tells you to run `gh auth login` once. You can save it later from the home screen.
+4. **Stop** runs a final build, writes `SUMMARY.md` and commits.
+5. **Menu → Deploy → Save to a private repo** creates a private GitHub repo named after the project with `gh repo create` and pushes. If GitHub isn't connected, the app stays local and Deploy shows the one-time `gh auth login` step. You can save older ideas from **Menu → Ideas**.
 
-Afterwards it's a normal standalone project. Run it with `npm install && npm run dev`, open it in Claude Code, or tap **Continue** for another conversation.
+Afterwards it's a normal standalone project. Run it with `npm install && npm run dev`, open it in Claude Code, or record again to keep going.
 
 ## Safety notes
 
@@ -145,7 +144,9 @@ Code map:
 - `server/src/builder/`: Claude Code builder, its prompt, and permission guardrails
 - `server/src/preview/viteManager.ts`: one Vite dev server per project, proxied at `/preview/<id>/`
 - `server/src/publish/github.ts`: Save to GitHub
-- `web/`: the phone UI, an installable web app
+- `web/src/components/Recorder.tsx`: the main screen (the button, the timer, the menu dot)
+- `web/src/components/Menu.tsx`: transcript, plan, app, deploy, ideas, phone link
+- `web/src/App.tsx`: record/stop, which idea the next recording continues, the menu dot
 
 ## Roadmap
 
