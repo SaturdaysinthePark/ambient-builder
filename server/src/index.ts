@@ -19,6 +19,8 @@ import { PcmChunker } from './transcribe/chunker.js'
 import { WhisperCppTranscriber } from './transcribe/whisperCpp.js'
 import { startTunnel } from './tunnel.js'
 
+const joinUrl = (base: string) => `${base.replace(/\/$/, '')}/?key=${config.token}`
+
 export async function createServer() {
   const store = new ProjectStore()
   const preview = new PreviewManager()
@@ -55,13 +57,12 @@ export async function createServer() {
 
   // ---------- auth ----------
   const COOKIE = 'ambient_token'
-  const tokenFrom = (req: IncomingMessage) => {
+  // Query param is `key`, not `t`: Vite uses `?t=` for cache-busting hot updates.
+  const authed = (req: IncomingMessage) => {
     const url = new URL(req.url ?? '/', 'http://x')
     const cookie = /(?:^|;\s*)ambient_token=([^;]+)/.exec(req.headers.cookie ?? '')?.[1]
-    return url.searchParams.get('t') ?? (req.headers['x-ambient-token'] as string | undefined) ?? cookie
+    return [url.searchParams.get('key'), req.headers['x-ambient-token'], cookie].includes(config.token)
   }
-  const authed = (req: IncomingMessage) => tokenFrom(req) === config.token
-  const joinUrl = (base: string) => `${base.replace(/\/$/, '')}/?t=${config.token}`
 
   const app = Fastify({ logger: false, bodyLimit: 1_000_000 })
 
@@ -72,8 +73,8 @@ export async function createServer() {
       )
       return reply
     }
-    const t = new URL(req.raw.url ?? '/', 'http://x').searchParams.get('t')
-    if (t) {
+    const key = new URL(req.raw.url ?? '/', 'http://x').searchParams.get('key')
+    if (key === config.token) {
       // Trade the URL token for a cookie so the preview iframe and WebSocket are authorized too.
       reply.header('set-cookie', `${COOKIE}=${config.token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000`)
       if (req.method === 'GET' && req.url.startsWith('/?')) return reply.redirect('/')
@@ -268,7 +269,7 @@ async function main() {
   await writeFile(path.join(config.projectsDir, '.server.json'), JSON.stringify({ url: local, token: config.token }))
 
   console.log(`\n  Ambient Builder${config.mock ? ' (MOCK mode: no Claude calls)' : ''}`)
-  console.log(`  Open on this laptop:  ${local}/?t=${config.token}\n`)
+  console.log(`  Open on this laptop:  ${joinUrl(local)}\n`)
   if (!config.mock && process.env.ANTHROPIC_API_KEY && !config.useApiKey) {
     console.log('  Note: ANTHROPIC_API_KEY is set but ignored, so Claude Code uses your subscription login.')
     console.log('        (Set AMBIENT_USE_API_KEY=1 to bill the API key instead.)\n')
@@ -278,7 +279,7 @@ async function main() {
     const url = await startTunnel(config.port)
     if (url) {
       server.setPublicUrl(url)
-      const join = `${url}/?t=${config.token}`
+      const join = joinUrl(url)
       console.log(`  Phone link (HTTPS, needed for the mic):\n  ${join}\n`)
       console.log(await QRCode.toString(join, { type: 'terminal', small: true }))
     }

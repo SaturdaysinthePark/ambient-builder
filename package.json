@@ -4,16 +4,27 @@
   "version": "0.1.0",
   "description": "Talk about an idea; a coding agent builds it while you talk.",
   "type": "module",
-  "workspaces": ["server", "web"],
+  "workspaces": [
+    "server",
+    "web"
+  ],
   "scripts": {
     "setup": "npm install && npm --prefix templates/starter-app install --no-audit --no-fund",
-    "dev": "npm run build -w web && npm run start -w server",
-    "start": "npm run start -w server",
-    "tunnel": "npm run start -w server -- --tunnel",
+    "start": "npm run build -w web && npm run start -w server",
+    "tunnel": "npm run build -w web && npm run start -w server -- --tunnel",
+    "mock": "npm run build -w web && AMBIENT_MOCK=1 npm run start -w server",
     "replay": "npm run replay -w server --",
+    "whisper:setup": "bash scripts/setup-whisper.sh",
+    "whisper": "whisper-server -m models/ggml-${WHISPER_MODEL:-base.en}.bin --host 127.0.0.1 --port 8178",
     "build": "npm run build -w web",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
-    "test": "npm run test -w server"
+    "test": "npm run test -w server",
+    "e2e": "npm run build && playwright test"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
 }

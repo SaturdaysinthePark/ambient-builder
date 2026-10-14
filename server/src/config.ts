@@ -31,5 +31,7 @@ export const config = {
 export function claudeEnv(): Record<string, string | undefined> {
   const env: Record<string, string | undefined> = { ...process.env, CLAUDE_AGENT_SDK_CLIENT_APP: 'ambient-builder/0.1.0' }
   if (!config.useApiKey) delete env.ANTHROPIC_API_KEY
+  // If this server was started from inside Claude Code, don't let the builder think it's a child of that session.
+  for (const k of ['CLAUDECODE', 'CLAUDE_CODE_SESSION_ID', 'CLAUDE_CODE_CHILD_SESSION', 'CLAUDE_CODE_ENTRYPOINT', 'CLAUDE_PID']) delete env[k]
   return env
 }

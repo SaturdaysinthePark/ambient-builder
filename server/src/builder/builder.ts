@@ -62,13 +62,13 @@ export class ClaudeCodeBuilder implements Builder {
         systemPrompt: { type: 'preset', preset: 'claude_code', append: BUILDER_APPEND },
         settingSources: ['project'],
         tools: ['Read', 'Write', 'Edit', 'Glob', 'Grep', 'Bash'],
-        allowedTools: ['Read', 'Glob', 'Grep'],
         permissionMode: 'acceptEdits',
         canUseTool: async (toolName, input) => {
           if (toolName === 'Bash') {
             const verdict = checkBash(String(input.command ?? ''))
             return verdict.ok ? { behavior: 'allow', updatedInput: input } : { behavior: 'deny', message: verdict.reason }
           }
+          // Every other tool call is checked here (nothing is pre-approved), so reads stay in the app folder too.
           const p = String(input.file_path ?? input.path ?? '')
           if (['Write', 'Edit', 'Read', 'Glob', 'Grep'].includes(toolName) && (!p || isInside(req.appDir, p))) {
             return { behavior: 'allow', updatedInput: input }

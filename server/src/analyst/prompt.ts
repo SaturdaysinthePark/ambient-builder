@@ -14,7 +14,8 @@ Rules:
 - When the conversation reverses an earlier point, mark the old item superseded (with reason) and add the replacement.
 - When an open question gets answered, update that item's status instead of adding a duplicate.
 - Ignore small talk. Speech-to-text is imperfect: read through obvious transcription errors.
-- Keep item text short (under 15 words), present tense, no speaker names.
+- Keep item text short (under 15 words), present tense, no speaker names (in text or reason).
+- Give a reason only for superseded, roadmap, or low-confidence items, in under 12 words.
 - Set projectName (kebab-case, 1-3 words) once the product is clear, and keep summary current.
 - If nothing new of substance was said, return an empty upserts array.`
 
